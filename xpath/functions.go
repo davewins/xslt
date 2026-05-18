@@ -9,7 +9,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"xslt2/dom"
+	"github.com/davewins/xslt/dom"
 )
 
 // RegisterBuiltins populates a function map with all standard XPath 2.0 functions.

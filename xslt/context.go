@@ -1,8 +1,8 @@
 package xslt
 
 import (
-	"xslt2/dom"
-	"xslt2/xpath"
+	"github.com/davewins/xslt/dom"
+	"github.com/davewins/xslt/xpath"
 )
 
 // TransformContext holds the full XSLT transformation state.

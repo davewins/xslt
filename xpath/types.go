@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"xslt2/dom"
+	"github.com/davewins/xslt/dom"
 )
 
 // Item is any XPath 2.0 item (node or atomic value).

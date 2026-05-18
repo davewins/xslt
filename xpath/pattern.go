@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"xslt2/dom"
+	"github.com/davewins/xslt/dom"
 )
 
 // Pattern represents a compiled XSLT match pattern.

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strings"
 
-	"xslt2/dom"
+	"github.com/davewins/xslt/dom"
 )
 
 // Serialize serializes a result document to bytes according to the stylesheet's output settings.

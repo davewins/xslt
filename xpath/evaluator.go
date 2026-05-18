@@ -5,7 +5,7 @@ import (
 	"math"
 	"sort"
 
-	"xslt2/dom"
+	"github.com/davewins/xslt/dom"
 )
 
 // Eval evaluates a pre-parsed XPath expression against the given context.

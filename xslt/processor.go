@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"xslt2/dom"
-	"xslt2/xpath"
+	"github.com/davewins/xslt/dom"
+	"github.com/davewins/xslt/xpath"
 )
 
 // Processor applies a compiled stylesheet to source XML documents.

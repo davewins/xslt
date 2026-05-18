@@ -1,6 +1,6 @@
 package xpath
 
-import "xslt2/dom"
+import "github.com/davewins/xslt/dom"
 
 // Function is the signature for a built-in or user-defined XPath function.
 type Function func(ctx *Context, args []Sequence) (Sequence, error)

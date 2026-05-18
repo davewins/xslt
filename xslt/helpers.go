@@ -8,8 +8,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"xslt2/dom"
-	"xslt2/xpath"
+	"github.com/davewins/xslt/dom"
+	"github.com/davewins/xslt/xpath"
 )
 
 // evalVariable evaluates a variable's value from select or body content.

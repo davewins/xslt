@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"xslt2/dom"
-	"xslt2/xpath"
+	"github.com/davewins/xslt/dom"
+	"github.com/davewins/xslt/xpath"
 )
 
 const xslNS = "http://www.w3.org/1999/XSL/Transform"

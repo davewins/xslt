@@ -14,9 +14,9 @@ package xslt2
 import (
 	"fmt"
 
-	"xslt2/dom"
-	"xslt2/xpath"
-	"xslt2/xslt"
+	"github.com/davewins/xslt/dom"
+	"github.com/davewins/xslt/xpath"
+	"github.com/davewins/xslt/xslt"
 )
 
 // Processor is a compiled XSLT 2.0 stylesheet ready to transform XML documents.
