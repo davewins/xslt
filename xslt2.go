@@ -9,7 +9,7 @@
 //	proc, err := xslt2.New(xsltBytes)
 //	result, err := proc.Transform(xmlBytes)
 //	result, err = proc.TransformWithParams(xmlBytes, map[string]interface{}{"key": "value"})
-package xslt2
+package xslt
 
 import (
 	"fmt"

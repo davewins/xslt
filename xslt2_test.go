@@ -1,4 +1,4 @@
-package xslt2_test
+package xslt_test
 
 import (
 	"strings"
