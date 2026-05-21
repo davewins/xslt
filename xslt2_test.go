@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"xslt2"
+	"github.com/davewins/xslt"
 )
 
 func TestBasicTransform(t *testing.T) {
@@ -27,7 +27,7 @@ func TestBasicTransform(t *testing.T) {
   </xsl:template>
 </xsl:stylesheet>`)
 
-	result, err := xslt2.Transform(xml, xsltDoc)
+	result, err := xslt.Transform(xml, xsltDoc)
 	if err != nil {
 		t.Fatalf("Transform error: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestForEach(t *testing.T) {
   </xsl:template>
 </xsl:stylesheet>`)
 
-	result, err := xslt2.Transform(xml, xsltDoc)
+	result, err := xslt.Transform(xml, xsltDoc)
 	if err != nil {
 		t.Fatalf("Transform error: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestChoose(t *testing.T) {
   </xsl:template>
 </xsl:stylesheet>`)
 
-	result, err := xslt2.Transform(xml, xsltDoc)
+	result, err := xslt.Transform(xml, xsltDoc)
 	if err != nil {
 		t.Fatalf("Transform error: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestSort(t *testing.T) {
   </xsl:template>
 </xsl:stylesheet>`)
 
-	result, err := xslt2.Transform(xml, xsltDoc)
+	result, err := xslt.Transform(xml, xsltDoc)
 	if err != nil {
 		t.Fatalf("Transform error: %v", err)
 	}
@@ -116,7 +116,7 @@ func TestVariables(t *testing.T) {
   </xsl:template>
 </xsl:stylesheet>`)
 
-	result, err := xslt2.Transform(xml, xsltDoc)
+	result, err := xslt.Transform(xml, xsltDoc)
 	if err != nil {
 		t.Fatalf("Transform error: %v", err)
 	}
@@ -139,7 +139,7 @@ func TestXPathFunctions(t *testing.T) {
   </xsl:template>
 </xsl:stylesheet>`)
 
-	result, err := xslt2.Transform(xml, xsltDoc)
+	result, err := xslt.Transform(xml, xsltDoc)
 	if err != nil {
 		t.Fatalf("Transform error: %v", err)
 	}
@@ -161,7 +161,7 @@ func TestCopyOf(t *testing.T) {
   </xsl:template>
 </xsl:stylesheet>`)
 
-	result, err := xslt2.Transform(xml, xsltDoc)
+	result, err := xslt.Transform(xml, xsltDoc)
 	if err != nil {
 		t.Fatalf("Transform error: %v", err)
 	}
@@ -191,7 +191,7 @@ func TestForEachGroup(t *testing.T) {
   </xsl:template>
 </xsl:stylesheet>`)
 
-	result, err := xslt2.Transform(xml, xsltDoc)
+	result, err := xslt.Transform(xml, xsltDoc)
 	if err != nil {
 		t.Fatalf("Transform error: %v", err)
 	}
@@ -211,7 +211,7 @@ func TestParams(t *testing.T) {
   </xsl:template>
 </xsl:stylesheet>`)
 
-	proc, err := xslt2.New(xsltDoc)
+	proc, err := xslt.New(xsltDoc)
 	if err != nil {
 		t.Fatalf("New error: %v", err)
 	}
