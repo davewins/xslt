@@ -7,9 +7,20 @@ import (
 	"io"
 )
 
-// Parse parses raw XML bytes into a Document.
+// DefaultMaxDepth is the element-nesting depth limit applied by Parse.
+// Documents nested more deeply than this are rejected to prevent stack
+// exhaustion in the (recursive) consumers of the resulting tree.
+const DefaultMaxDepth = 5000
+
+// Parse parses raw XML bytes into a Document, applying DefaultMaxDepth.
 // It uses encoding/xml's RawToken so that namespace prefixes are preserved.
 func Parse(data []byte) (*Document, error) {
+	return ParseLimited(data, DefaultMaxDepth)
+}
+
+// ParseLimited parses raw XML bytes into a Document, rejecting input whose
+// element nesting exceeds maxDepth. A maxDepth <= 0 means no limit.
+func ParseLimited(data []byte, maxDepth int) (*Document, error) {
 	doc := NewDocument()
 	dec := xml.NewDecoder(bytes.NewReader(data))
 	dec.Strict = false
@@ -100,6 +111,9 @@ func Parse(data []byte) (*Document, error) {
 			parent.Children = append(parent.Children, elem)
 			stack = append(stack, elem)
 			nsStack = append(nsStack, newScope)
+			if maxDepth > 0 && len(stack)-1 > maxDepth {
+				return nil, fmt.Errorf("dom: XML nesting depth exceeds limit of %d", maxDepth)
+			}
 
 		case xml.EndElement:
 			stack = stack[:len(stack)-1]

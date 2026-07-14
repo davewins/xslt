@@ -80,6 +80,31 @@ out, err := proc.TransformVerbose(xmlBytes, params)
 // out.Messages []string — content of any xsl:message instructions
 ```
 
+## Security and resource limits
+
+Transformations are protected against denial-of-service from untrusted
+stylesheets or documents. Safe defaults are applied automatically — **existing
+code needs no changes** — and can be overridden with `WithLimits`:
+
+```go
+proc, err := xslt2.New(xsltBytes, xslt2.WithLimits(xslt2.Limits{
+    MaxTemplateDepth: 20000,     // template/instruction recursion cap
+    MaxNodeDepth:     10000,     // element nesting depth of parsed input
+    MaxRangeSize:     50_000_000, // max items in an XPath range ("a to b")
+}))
+// Transform(xml, xslt, opts...) accepts the same options.
+```
+
+Any zero field keeps its default (`MaxTemplateDepth` 10000, `MaxNodeDepth` 5000,
+`MaxRangeSize` 10,000,000). Exceeding a limit returns an error rather than
+crashing the process (unbounded recursion would otherwise be an unrecoverable
+Go stack overflow, and unbounded ranges an out-of-memory).
+
+In addition, computed output is validated: an `xsl:comment`, `xsl:element` /
+`xsl:attribute` name, or `xsl:processing-instruction` built from untrusted data
+that would break out of its markup (e.g. `-->`, `?>`, or an illegal name) causes
+the transform to return an error instead of emitting malformed/injected output.
+
 ## Supported XSLT 2.0 features
 
 ### Instructions

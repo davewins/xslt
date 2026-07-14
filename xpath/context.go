@@ -14,6 +14,10 @@ type Context struct {
 	Funcs    map[string]Function  // function library (name → handler)
 	NSMap    map[string]string    // namespace prefix → URI
 	Doc      *dom.Document        // the source document
+
+	// MaxRangeSize caps the number of items an integer range ("a to b") may
+	// produce, guarding against attacker-controlled memory blow-up. 0 = no limit.
+	MaxRangeSize int
 }
 
 // NewContext creates an empty evaluation context.
@@ -29,13 +33,14 @@ func NewContext(doc *dom.Document) *Context {
 // Sub returns a derived context with the given item/position/size.
 func (c *Context) Sub(item Item, pos, size int) *Context {
 	return &Context{
-		Item:     item,
-		Position: pos,
-		Size:     size,
-		Vars:     c.Vars,
-		Funcs:    c.Funcs,
-		NSMap:    c.NSMap,
-		Doc:      c.Doc,
+		Item:         item,
+		Position:     pos,
+		Size:         size,
+		Vars:         c.Vars,
+		Funcs:        c.Funcs,
+		NSMap:        c.NSMap,
+		Doc:          c.Doc,
+		MaxRangeSize: c.MaxRangeSize,
 	}
 }
 
@@ -47,13 +52,14 @@ func (c *Context) WithVar(name string, val Sequence) *Context {
 	}
 	newVars[name] = val
 	return &Context{
-		Item:     c.Item,
-		Position: c.Position,
-		Size:     c.Size,
-		Vars:     newVars,
-		Funcs:    c.Funcs,
-		NSMap:    c.NSMap,
-		Doc:      c.Doc,
+		Item:         c.Item,
+		Position:     c.Position,
+		Size:         c.Size,
+		Vars:         newVars,
+		Funcs:        c.Funcs,
+		NSMap:        c.NSMap,
+		Doc:          c.Doc,
+		MaxRangeSize: c.MaxRangeSize,
 	}
 }
 
