@@ -29,9 +29,15 @@ func MustParse(expr string) Expr {
 	return e
 }
 
+// MaxExprDepth bounds the nesting depth of a parsed XPath expression, guarding
+// the recursive-descent parser against stack exhaustion from a hostile
+// stylesheet (e.g. thousands of nested parentheses). 0 = no limit.
+var MaxExprDepth = 1000
+
 type parser struct {
-	lex *Lexer
-	src string
+	lex   *Lexer
+	src   string
+	depth int
 }
 
 // parseExpr ::= ExprSingle (',' ExprSingle)*
@@ -57,6 +63,13 @@ func (p *parser) parseExpr() (Expr, error) {
 
 // parseExprSingle ::= ForExpr | QuantifiedExpr | IfExpr | OrExpr
 func (p *parser) parseExprSingle() (Expr, error) {
+	if MaxExprDepth > 0 {
+		p.depth++
+		if p.depth > MaxExprDepth {
+			return nil, fmt.Errorf("xpath: expression nesting exceeds limit of %d", MaxExprDepth)
+		}
+		defer func() { p.depth-- }()
+	}
 	switch p.lex.Peek().Kind {
 	case TokFor:
 		return p.parseForExpr()

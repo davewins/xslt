@@ -13,16 +13,22 @@ import (
 // Processor applies a compiled stylesheet to source XML documents.
 type Processor struct {
 	Stylesheet *Stylesheet
+	Limits     Limits
 }
 
-// NewProcessor creates a new Processor with the given stylesheet.
-func NewProcessor(ss *Stylesheet) *Processor {
-	return &Processor{Stylesheet: ss}
+// NewProcessor creates a new Processor with the given stylesheet. Resource
+// limits may be supplied; if omitted, DefaultLimits are used.
+func NewProcessor(ss *Stylesheet, limits ...Limits) *Processor {
+	l := DefaultLimits()
+	if len(limits) > 0 {
+		l = limits[0].normalize()
+	}
+	return &Processor{Stylesheet: ss, Limits: l}
 }
 
 // Transform applies the stylesheet to a source document and returns the result document.
 func (p *Processor) Transform(sourceDoc *dom.Document, params map[string]xpath.Sequence) (*dom.Document, []string, error) {
-	tc := NewTransformContext(p.Stylesheet, sourceDoc)
+	tc := NewTransformContext(p.Stylesheet, sourceDoc, p.Limits)
 
 	// Evaluate global params and variables.
 	xctx := tc.XPathCtx.Sub(&xpath.NodeItem{Node: sourceDoc.Root}, 1, 1)
@@ -57,6 +63,11 @@ func (p *Processor) Transform(sourceDoc *dom.Document, params map[string]xpath.S
 
 // applyTemplates applies templates to a sequence of items, writing results to parent.
 func (p *Processor) applyTemplates(tc *TransformContext, xctx *xpath.Context, items []xpath.Item, mode string, parent *dom.Node) error {
+	done, err := tc.recurse()
+	defer done()
+	if err != nil {
+		return err
+	}
 	size := len(items)
 	for i, item := range items {
 		pos := i + 1
@@ -124,6 +135,11 @@ func (p *Processor) executeTemplate(tc *TransformContext, xctx *xpath.Context, t
 // executeBody processes all child nodes of a template/instruction body.
 // It threads variable context changes through sequential siblings.
 func (p *Processor) executeBody(tc *TransformContext, xctx *xpath.Context, bodyElem *dom.Node, parent *dom.Node) error {
+	done, err := tc.recurse()
+	defer done()
+	if err != nil {
+		return err
+	}
 	ctx := xctx
 	for _, child := range bodyElem.Children {
 		// Handle xsl:variable inline so subsequent siblings see the new binding.
@@ -753,6 +769,9 @@ func (p *Processor) instrElement(tc *TransformContext, xctx *xpath.Context, el *
 	if err != nil {
 		return err
 	}
+	if err := validateQName(nameStr); err != nil {
+		return fmt.Errorf("xslt: xsl:element name: %w", err)
+	}
 	nsStr := el.MustAttr("namespace")
 	if nsStr != "" {
 		if nsStr, err = p.expandAVT(tc, xctx, nsStr); err != nil {
@@ -789,6 +808,9 @@ func (p *Processor) instrAttribute(tc *TransformContext, xctx *xpath.Context, el
 	nameStr, err := p.expandAVT(tc, xctx, el.MustAttr("name"))
 	if err != nil {
 		return err
+	}
+	if err := validateQName(nameStr); err != nil {
+		return fmt.Errorf("xslt: xsl:attribute name: %w", err)
 	}
 	nsStr := el.MustAttr("namespace")
 	if nsStr != "" {
@@ -864,6 +886,11 @@ func (p *Processor) instrNamespace(tc *TransformContext, xctx *xpath.Context, el
 	if err != nil {
 		return err
 	}
+	if nameStr != "" {
+		if err := validateNCName(nameStr); err != nil {
+			return fmt.Errorf("xslt: xsl:namespace name: %w", err)
+		}
+	}
 	var uri string
 	if selectStr := el.MustAttr("select"); selectStr != "" {
 		e, err := xpath.Parse(selectStr)
@@ -923,6 +950,9 @@ func (p *Processor) instrComment(tc *TransformContext, xctx *xpath.Context, el *
 		}
 		val = temp.StringValue()
 	}
+	if err := validateCommentText(val); err != nil {
+		return fmt.Errorf("xslt: xsl:comment: %w", err)
+	}
 	parent.Children = append(parent.Children, &dom.Node{
 		Type:     dom.NodeComment,
 		Value:    val,
@@ -954,6 +984,12 @@ func (p *Processor) instrPI(tc *TransformContext, xctx *xpath.Context, el *dom.N
 			return err
 		}
 		val = temp.StringValue()
+	}
+	if err := validateNCName(nameStr); err != nil {
+		return fmt.Errorf("xslt: xsl:processing-instruction name: %w", err)
+	}
+	if err := validatePIData(val); err != nil {
+		return fmt.Errorf("xslt: xsl:processing-instruction: %w", err)
 	}
 	parent.Children = append(parent.Children, &dom.Node{
 		Type:      dom.NodeProcessingInstruction,
@@ -1196,6 +1232,11 @@ func (p *Processor) collectWithParams(tc *TransformContext, xctx *xpath.Context,
 
 // applyAttributeSets applies named attribute sets to an element.
 func (p *Processor) applyAttributeSets(tc *TransformContext, xctx *xpath.Context, names []string, el *dom.Node) error {
+	done, err := tc.recurse()
+	defer done()
+	if err != nil {
+		return err
+	}
 	for _, name := range names {
 		as, ok := tc.Stylesheet.AttributeSets[name]
 		if !ok {

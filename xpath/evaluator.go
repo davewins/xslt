@@ -929,6 +929,9 @@ func evalRange(e *RangeExpr, ctx *Context) (Sequence, error) {
 	if l > h {
 		return Sequence{}, nil
 	}
+	if ctx.MaxRangeSize > 0 && h-l+1 > int64(ctx.MaxRangeSize) {
+		return nil, fmt.Errorf("xpath: range size %d exceeds limit of %d", h-l+1, ctx.MaxRangeSize)
+	}
 	out := make(Sequence, 0, h-l+1)
 	for i := l; i <= h; i++ {
 		out = append(out, IntegerItem(i))

@@ -1,6 +1,8 @@
 package xslt
 
 import (
+	"fmt"
+
 	"github.com/davewins/xslt/dom"
 	"github.com/davewins/xslt/xpath"
 )
@@ -18,15 +20,20 @@ type TransformContext struct {
 	Params       map[string]xpath.Sequence // tunnel params
 	Keys         map[string]map[string][]*dom.Node // key name → value → nodes (built lazily)
 	Messages     []string
+
+	Limits Limits // resource limits for this transformation
+	depth  int    // current template/instruction recursion depth
 }
 
-// NewTransformContext creates a new transformation context.
-func NewTransformContext(ss *Stylesheet, sourceDoc *dom.Document) *TransformContext {
+// NewTransformContext creates a new transformation context with the given limits.
+func NewTransformContext(ss *Stylesheet, sourceDoc *dom.Document, limits Limits) *TransformContext {
+	limits = limits.normalize()
 	xctx := xpath.NewContext(sourceDoc)
 	xpath.RegisterBuiltins(xctx.Funcs)
 	xctx.NSMap["xsl"] = xslNS
 	xctx.NSMap["xs"] = "http://www.w3.org/2001/XMLSchema"
 	xctx.NSMap["fn"] = "http://www.w3.org/2005/xpath-functions"
+	xctx.MaxRangeSize = limits.MaxRangeSize
 
 	tc := &TransformContext{
 		Stylesheet: ss,
@@ -35,6 +42,7 @@ func NewTransformContext(ss *Stylesheet, sourceDoc *dom.Document) *TransformCont
 		XPathCtx:   xctx,
 		Params:     make(map[string]xpath.Sequence),
 		Keys:       make(map[string]map[string][]*dom.Node),
+		Limits:     limits,
 	}
 
 	// Register XSLT-specific functions.
@@ -175,6 +183,19 @@ func (tc *TransformContext) buildKey(name string, ctx *xpath.Context) {
 		}
 	}
 	walk(tc.SourceDoc.Root)
+}
+
+// recurse records entry into a recursive processing step. The returned function
+// must be deferred to balance the depth counter; the error is non-nil when the
+// configured recursion limit has been exceeded (guarding against unrecoverable
+// stack overflow from hostile stylesheets or deeply nested trees).
+func (tc *TransformContext) recurse() (func(), error) {
+	tc.depth++
+	release := func() { tc.depth-- }
+	if tc.depth > tc.Limits.MaxTemplateDepth {
+		return release, fmt.Errorf("xslt: recursion depth exceeds limit of %d", tc.Limits.MaxTemplateDepth)
+	}
+	return release, nil
 }
 
 // SubContext returns a derived XPath context with updated node/position/size.
